@@ -66,19 +66,10 @@ func main() {
 	http.HandleFunc("/create", func(w http.ResponseWriter, r *http.Request) {
 		q := r.URL.Query()
 		if q["name"] != nil && q["command"] != nil {
-			newJob := &MyJob{}
-			if q["args"] != nil {
-				newJob = &MyJob{
-					q["name"][0],
-					q["command"][0],
-					q["args"],
-				}
-			} else {
-				newJob = &MyJob{
-					q["name"][0],
-					q["command"][0],
-					nil,
-				}
+			newJob := &MyJob{
+				q["name"][0],
+				q["command"][0],
+				q["args"],
 			}
 			_, jobId := jobPool.QueueJob(newJob.Name, newJob, 0)
 			fmt.Fprintf(w, "%v", jobId)
