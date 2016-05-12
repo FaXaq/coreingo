@@ -7,24 +7,38 @@ import (
 	"net/http"
 	"html"
 	"log"
+	"sync"
+	"bytes"
 )
 
 type (
 	MyJob struct {
-		name string
-		commandName string
-		arguments []string
+		Name string
+		Command string
+		Args []string
 	}
 )
 
 func (myjob *MyJob) ExecuteJob() (err *gjp.JobError) {
-	out, commandError := exec.Command("echo","toto").Output()
-	if commandError != nil {
-		defer panic(commandError.Error())
-		err = gjp.NewJobError(commandError)
+	var mu sync.Mutex
+	var out bytes.Buffer
+	var stderr bytes.Buffer
+	fmt.Println("command : ",myjob.Command, myjob.Args)
+
+	mu.Lock()
+	cmd := exec.Command(myjob.Command,myjob.Args...)
+	mu.Unlock()
+
+	cmd.Stdout = &out //for debug purposes
+	cmd.Stderr = &stderr //for debug purposes
+
+	cmderr := cmd.Run()
+
+	if cmderr != nil {
+		err = gjp.NewJobError(cmderr, stderr.String())
 		return
 	}
-	fmt.Printf("The date is %s\n", out)
+	fmt.Println(out.String())
 	return
 }
 
@@ -49,30 +63,28 @@ func main() {
 		fmt.Fprintf(w, "%v", list)
 	})
 
-	http.HandleFunc("/1", func(w http.ResponseWriter, r *http.Request) {
-
-		newJob := &MyJob{
-			commandName: "echo",
+	http.HandleFunc("/create", func(w http.ResponseWriter, r *http.Request) {
+		q := r.URL.Query()
+		if q["name"] != nil && q["command"] != nil {
+			newJob := &MyJob{}
+			if q["args"] != nil {
+				newJob = &MyJob{
+					q["name"][0],
+					q["command"][0],
+					q["args"],
+				}
+			} else {
+				newJob = &MyJob{
+					q["name"][0],
+					q["command"][0],
+					nil,
+				}
+			}
+			_, jobId := jobPool.QueueJob(newJob.Name, newJob, 0)
+			fmt.Fprintf(w, "%v", jobId)
+		} else {
+			fmt.Fprintf(w, "Couldn't create the job")
 		}
-		_, jobId := jobPool.QueueJob(newJob.commandName, newJob, 0)
-		fmt.Fprintf(w, "%v", jobId)
-	})
-
-	http.HandleFunc("/2", func(w http.ResponseWriter, r *http.Request) {
-		newJob2 := &MyJob{
-			commandName: "wrong",
-		}
-		_, jobId := jobPool.QueueJob(newJob2.commandName, newJob2, 1)
-		fmt.Fprintf(w, "%v", jobId)
-	})
-
-	http.HandleFunc("/3", func(w http.ResponseWriter, r *http.Request) {
-
-		newJob3 := &MyJob{
-			commandName: "test",
-		}
-		_, jobId := jobPool.QueueJob(newJob3.commandName, newJob3, 1)
-		fmt.Fprintf(w, "%v", jobId)
 	})
 
 	http.HandleFunc("/search", func(w http.ResponseWriter, r *http.Request) {
