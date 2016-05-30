@@ -9,6 +9,7 @@ import (
 	"log"
 	"sync"
 	"bytes"
+	_ "net/http/pprof"
 )
 
 type (
@@ -18,6 +19,18 @@ type (
 		Args []string
 	}
 )
+
+func (myjob *MyJob) GetProgress() {
+	fmt.Println("100% Maggle")
+}
+
+func (myjob *MyJob) NotifyEnd(id string) {
+	http.Get("http://127.0.0.1:8124/")
+}
+
+func (myjob *MyJob) NotifyStart(id string) {
+	http.Get("http://127.0.0.1:8124/")
+}
 
 func (myjob *MyJob) ExecuteJob() (err *gjp.JobError) {
 	var mu sync.Mutex
@@ -39,6 +52,7 @@ func (myjob *MyJob) ExecuteJob() (err *gjp.JobError) {
 		return
 	}
 	fmt.Println(out.String())
+
 	return
 }
 
@@ -93,5 +107,6 @@ func main() {
 			fmt.Fprintf(w, "No search request")
 		}
 	})
-	log.Fatal(http.ListenAndServe(":8000", nil))
+
+	log.Println(http.ListenAndServe("localhost:6060", nil))
 }
