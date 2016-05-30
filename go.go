@@ -20,7 +20,7 @@ type (
 	}
 )
 
-func (myjob *MyJob) GetProgress() {
+func (myjob *MyJob) GetProgress(id string) {
 	fmt.Println("100% Maggle")
 }
 
