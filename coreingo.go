@@ -100,6 +100,22 @@ func NewJob (command, fromFile, toFile string) (j *MyJob) {
 	return
 }
 
+func GetTimingFromLogFile(filename string) (currentTiming string) {
+	file, err := os.Open(filename) // For read access.
+	if err != nil {
+		fmt.Println(err)
+	}
+	buf := make([]byte, 200)
+	stat, err := os.Stat(filename)
+	start := stat.Size() - 200
+	_, err = file.ReadAt(buf, start)
+	if err == nil {
+		fmt.Printf("%s\n", buf)
+	}
+	file.Close()
+	return
+}
+
 func (myjob *MyJob) GetProgress(id string) {
 	GetTimingFromLogFile("logs.gjp")
 }
