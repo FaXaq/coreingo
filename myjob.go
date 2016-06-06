@@ -97,10 +97,12 @@ func (myjob *MyJob) GetProgress(id string) (percentage float64, err error) {
 }
 
 func (myjob *MyJob) NotifyEnd(id string) {
+	fmt.Println(myjob.Name, "ended")
 	http.Get("http://127.0.0.1:8124/")
 }
 
 func (myjob *MyJob) NotifyStart(id string) {
+	fmt.Println(myjob.Name, "started")
 	http.Get("http://127.0.0.1:8124/")
 }
 
