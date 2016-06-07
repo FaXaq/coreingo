@@ -1,44 +1,44 @@
 package main
 
 import (
-	"fmt" //format for console logs
-	"github.com/FaXaq/gjp" //custom library for jobs
-	"os/exec" //command execs
-	"net/http" //web services
-	"sync" //command sync
 	"bytes" //bytes manipulation
-	_ "net/http/pprof" //get http logs
-	"os" //to create directory
-	"strconv" //str conversion
 	"errors"
+	"fmt"                  //format for console logs
+	"github.com/FaXaq/gjp" //custom library for jobs
 	"io/ioutil"
+	"net/http"         //web services
+	_ "net/http/pprof" //get http logs
+	"os"               //to create directory
+	"os/exec"          //command execs
+	"strconv"          //str conversion
+	"sync"             //command sync
 )
 
 type (
 	MyJob struct {
-		Id string
-		Name string
-		Commands []string
-		Args [][]string
-		Path string
-		MediaLength int64
-		MediaFiles []string
-		FromFile string
-		ToFile string
+		Id            string
+		Name          string
+		Commands      []string
+		Args          [][]string
+		Path          string
+		MediaLength   int64
+		MediaFiles    []string
+		FromFile      string
+		ToFile        string
 		ReportChannel chan *gjp.JobError
 	}
 )
 
-func NewJob (id, command, fromFile, toFile string) (j *MyJob, err error) {
+func NewJob(id, command, fromFile, toFile string) (j *MyJob, err error) {
 	var (
-		cmd string //tmp command
-		cmds []string //commands array
-		args []string //args array
-		cmdsArgs [][]string //commands arguments matching commands array
+		cmd          string     //tmp command
+		cmds         []string   //commands array
+		args         []string   //args array
+		cmdsArgs     [][]string //commands arguments matching commands array
 		fromFileName string
-		toExt string
-		fromExt string
-		path string //working directory
+		toExt        string
+		fromExt      string
+		path         string //working directory
 	)
 	path = GetFileDirectory(fromFile)
 	mediaLength, err := GetFileDuration(fromFile)
@@ -54,23 +54,23 @@ func NewJob (id, command, fromFile, toFile string) (j *MyJob, err error) {
 	}
 
 	//create log, tmp, and output directory
-	os.Mkdir(GetFileDirectory(path) + "/" + "out", 0777) //filepath.Div
-	os.Mkdir(LogPath + "/" + id, 0777)
+	os.Mkdir(GetFileDirectory(path)+"/"+"out", 0777) //filepath.Div
+	os.Mkdir(LogPath+"/"+id, 0777)
 	os.Mkdir(WorkPath, 0777)
 
 	mediaFiles, splitErr := SplitMediaFile(id, fromFile, mediaLength)
 	ReplaceFromExtByToExt(id, WorkPath, fromExt, toExt)
 
-	if (splitErr != nil) {
+	if splitErr != nil {
 		fmt.Println("Error during split : ", splitErr)
 	}
 
 	if command == "convert" {
 		for i := 0; i < len(mediaFiles); i++ {
 			toPartFile := fromFileName + "-" + strconv.Itoa(i) + toExt
-			cmd, args = CreateConvertCommand(id + "-" + strconv.Itoa(i),
-				path, //fromFile
-				LogPath + "/" + id, //jobLogPath
+			cmd, args = CreateConvertCommand(id+"-"+strconv.Itoa(i),
+				path,           //fromFile
+				LogPath+"/"+id, //jobLogPath
 				mediaFiles[i],
 				toPartFile)
 			cmds = append(cmds, cmd)
@@ -79,9 +79,9 @@ func NewJob (id, command, fromFile, toFile string) (j *MyJob, err error) {
 	} else if command == "extract-audio" {
 		for i := 0; i < len(mediaFiles); i++ {
 			toPartFile := fromFileName + "-" + strconv.Itoa(i) + toExt
-			cmd, args = CreateExtractAudioCommand(id + "-" + strconv.Itoa(i),
-				path, //fromFile
-				LogPath + "/" + id, //jobLogPath
+			cmd, args = CreateExtractAudioCommand(id+"-"+strconv.Itoa(i),
+				path,           //fromFile
+				LogPath+"/"+id, //jobLogPath
 				mediaFiles[i],
 				toPartFile)
 			cmds = append(cmds, cmd)
@@ -110,8 +110,8 @@ func NewJob (id, command, fromFile, toFile string) (j *MyJob, err error) {
 
 func (myjob *MyJob) GetProgress(id string) (percentage float64, err error) {
 	var (
-		timings []string
-		timing string
+		timings   []string
+		timing    string
 		timingSum float64
 	)
 	jobLogPath := LogPath + "/" + id + "/"
@@ -121,10 +121,10 @@ func (myjob *MyJob) GetProgress(id string) (percentage float64, err error) {
 
 	//retrieve all timings from files
 	for _, file := range files {
-		timingInfos, err := GetInfosFromFile(jobLogPath + file.Name(),
+		timingInfos, err := GetInfosFromFile(jobLogPath+file.Name(),
 			"out_time_ms", "=", "\n")
 
-		timing = timingInfos[len(timingInfos) - 1]
+		timing = timingInfos[len(timingInfos)-1]
 
 		timings = append(timings, timing)
 
@@ -135,7 +135,7 @@ func (myjob *MyJob) GetProgress(id string) (percentage float64, err error) {
 	}
 
 	for i := 0; i < len(timings); i++ {
-		tmpTiming, err := strconv.ParseFloat(timings[len(timings) - 1], 64)
+		tmpTiming, err := strconv.ParseFloat(timings[len(timings)-1], 64)
 		if err != nil {
 			fmt.Println(err.Error())
 			return timingSum, err
@@ -161,7 +161,7 @@ func (myjob *MyJob) NotifyStart(id string) {
 
 func (myjob *MyJob) ExecuteJob(id string) (err *gjp.JobError) {
 	var (
-		mu sync.Mutex
+		mu  sync.Mutex
 		out []byte
 	)
 
@@ -171,9 +171,9 @@ func (myjob *MyJob) ExecuteJob(id string) (err *gjp.JobError) {
 	}
 
 	for i := 0; i < len(myjob.Commands); i++ {
-		err = <- myjob.ReportChannel
+		err = <-myjob.ReportChannel
 		if err != nil {
-			fmt.Println("\n------\nPart", i, "of Job",id,"errored\n------\n")
+			fmt.Println("\n------\nPart", i, "of Job", id, "errored\n------\n")
 			fmt.Println(err.FmtError())
 		}
 	}
@@ -182,12 +182,12 @@ func (myjob *MyJob) ExecuteJob(id string) (err *gjp.JobError) {
 
 	//concat file when finished
 
-	command, args := CreateConcatCommand(WorkPath + "/" + id + ".ffconcat", myjob.Path, myjob.ToFile)
+	command, args := CreateConcatCommand(WorkPath+"/"+id+".ffconcat", myjob.Path, myjob.ToFile)
 
 	fmt.Println(command, args)
 
 	mu.Lock()
-	out, cmderr := exec.Command(command,args...).Output()
+	out, cmderr := exec.Command(command, args...).Output()
 	mu.Unlock()
 
 	if cmderr != nil {
@@ -199,19 +199,19 @@ func (myjob *MyJob) ExecuteJob(id string) (err *gjp.JobError) {
 
 func (myjob *MyJob) ExecutePartialJob(command string, args []string) {
 	var (
-		mu sync.Mutex
-		out bytes.Buffer
+		mu     sync.Mutex
+		out    bytes.Buffer
 		stderr bytes.Buffer
-		err *gjp.JobError
+		err    *gjp.JobError
 	)
 
 	fmt.Println(command, args)
 
 	mu.Lock()
-	cmd := exec.Command(command,args...)
+	cmd := exec.Command(command, args...)
 	mu.Unlock()
 
-	cmd.Stdout = &out //for debug purposes
+	cmd.Stdout = &out    //for debug purposes
 	cmd.Stderr = &stderr //for debug purposes
 
 	cmderr := cmd.Run()

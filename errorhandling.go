@@ -10,7 +10,7 @@ func CreateCustomJson(key, values []string) (j []byte) {
 
 	m = make(map[string]string)
 
-	for i,_ := range key {
+	for i, _ := range key {
 		m[key[i]] = values[i]
 	}
 

@@ -1,19 +1,19 @@
 package main
 
 import (
-	"net/http"
-	"html"
 	"fmt"
 	"github.com/FaXaq/gjp"
+	"html"
 	"log"
+	"net/http"
 )
 
 //global config variables
 var (
 	CallbackStart string
-	CallbackEnd string
-	WorkPath string
-	LogPath string
+	CallbackEnd   string
+	WorkPath      string
+	LogPath       string
 )
 
 func main() {
@@ -74,7 +74,7 @@ func main() {
 					customJson := CreateCustomJson([]string{
 						"Error",
 						"Id",
-					},[]string{
+					}, []string{
 						jsonerr.Error(),
 						j.GetJobId(),
 					})
@@ -131,7 +131,6 @@ func main() {
 			fmt.Fprintf(w, "No search request")
 		}
 	})
-
 
 	//launch server
 	log.Println(http.ListenAndServe("localhost:6060", nil))

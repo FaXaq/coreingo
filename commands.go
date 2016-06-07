@@ -1,15 +1,15 @@
 package main
 
 import (
-	"strings"
 	"strconv"
+	"strings"
 )
 
 /*
 create commands
 */
 
-func CreateConvertCommand (id, path, logPath, fromFile, toFile string) (cmd string, args []string) {
+func CreateConvertCommand(id, path, logPath, fromFile, toFile string) (cmd string, args []string) {
 	cmd = "ffmpeg"
 	args = []string{
 		"-y",
@@ -41,12 +41,12 @@ func CreateExtractAudioCommand(id, path, logPath, fromFile, toFile string) (cmd 
 	return
 }
 
-func CreateGetInfoCommand (fromFile string, infos []string) (cmd string, args []string) {
+func CreateGetInfoCommand(fromFile string, infos []string) (cmd string, args []string) {
 	cmd = "ffprobe"
 	args = []string{"-v",
 		"error",
 		"-show_entries",
-		"format=" + strings.Join(infos,","),
+		"format=" + strings.Join(infos, ","),
 		"-of",
 		"default=noprint_wrappers=1:nokey=1",
 		fromFile}
@@ -54,7 +54,7 @@ func CreateGetInfoCommand (fromFile string, infos []string) (cmd string, args []
 	return
 }
 
-func CreateFileSplitCommand (fileName, path, fileExt, logFileName string, duration int) (cmd string, args []string) {
+func CreateFileSplitCommand(fileName, path, fileExt, logFileName string, duration int) (cmd string, args []string) {
 	cmd = "ffmpeg"
 	args = []string{
 		"-y",
@@ -82,7 +82,7 @@ func CreateFileSplitCommand (fileName, path, fileExt, logFileName string, durati
 	return
 }
 
-func CreateConcatCommand (inputFile, path, toFile string) (cmd string, args []string) {
+func CreateConcatCommand(inputFile, path, toFile string) (cmd string, args []string) {
 	cmd = "ffmpeg"
 	args = []string{
 		"-y",

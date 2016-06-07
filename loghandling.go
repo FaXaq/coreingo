@@ -1,13 +1,13 @@
 package main
 
 import (
-	"os"
-	"fmt"
-	"strings"
 	"errors"
+	"fmt"
+	"os"
+	"strings"
 )
 
-func GetInfosFromFile (filename, infoName, delimiter, dataDelimiter string) (infos []string, err error) {
+func GetInfosFromFile(filename, infoName, delimiter, dataDelimiter string) (infos []string, err error) {
 	var start int64
 
 	file, err := os.Open(filename) // For read access
@@ -36,10 +36,10 @@ func GetInfosFromFile (filename, infoName, delimiter, dataDelimiter string) (inf
 
 	logsArray := strings.Split(lastInput, dataDelimiter)
 
-	for i := len(logsArray)-1; i >= 0; i-- {
-		if strings.Contains(logsArray[i], infoName + delimiter) {
+	for i := len(logsArray) - 1; i >= 0; i-- {
+		if strings.Contains(logsArray[i], infoName+delimiter) {
 			infos = append(infos, strings.Trim(logsArray[i],
-				infoName + delimiter))
+				infoName+delimiter))
 		}
 	}
 

@@ -1,17 +1,17 @@
 package main
 
 import (
-	"strconv"
-	"sync"
-	"os/exec"
 	"bytes"
 	"fmt"
-	"strings"
-	"path/filepath"
 	"io/ioutil"
+	"os/exec"
+	"path/filepath"
+	"strconv"
+	"strings"
+	"sync"
 )
 
-func GetInfosOnMediaFile (fromFile string, infos []string) (info string) {
+func GetInfosOnMediaFile(fromFile string, infos []string) (info string) {
 	var mu sync.Mutex
 	var out bytes.Buffer
 	var stderr bytes.Buffer
@@ -19,7 +19,7 @@ func GetInfosOnMediaFile (fromFile string, infos []string) (info string) {
 	cmd, args := CreateGetInfoCommand(fromFile, infos)
 
 	mu.Lock()
-	cmdResult := exec.Command(cmd,args...)
+	cmdResult := exec.Command(cmd, args...)
 	mu.Unlock()
 
 	cmdResult.Stdout = &out
@@ -36,8 +36,7 @@ func GetInfosOnMediaFile (fromFile string, infos []string) (info string) {
 	return
 }
 
-
-func GetFileDuration (file string) (duration int64, err error) {
+func GetFileDuration(file string) (duration int64, err error) {
 	lengthString := GetInfosOnMediaFile(file, []string{"duration"})
 	duration = 0.0
 
@@ -53,18 +52,18 @@ func GetFileDuration (file string) (duration int64, err error) {
 }
 
 //split media files into 5 distinct files
-func SplitMediaFile (jobId, file string, duration int64) (files []string, err error) {
+func SplitMediaFile(jobId, file string, duration int64) (files []string, err error) {
 	fmt.Println("SplitMediaFile")
 	var (
-		mu sync.Mutex
-		out bytes.Buffer
-		stderr bytes.Buffer
-		segmentLength float64
+		mu              sync.Mutex
+		out             bytes.Buffer
+		stderr          bytes.Buffer
+		segmentLength   float64
 		segmentDuration int
-		path string
-		fileExt string
-		fileName string
-		logFileName string
+		path            string
+		fileExt         string
+		fileName        string
+		logFileName     string
 	)
 
 	//retrieve file informations
@@ -73,7 +72,7 @@ func SplitMediaFile (jobId, file string, duration int64) (files []string, err er
 	fileExt = GetFileExt(file)
 	logFileName = jobId + ".ffconcat"
 
-	if duration % 5 == 0 {
+	if duration%5 == 0 {
 		segmentLength = (float64(duration) / 5.0)
 	} else {
 		segmentLength = (float64(duration) / 5.0) + 1.0 //add the rest of the division to segment
@@ -86,7 +85,7 @@ func SplitMediaFile (jobId, file string, duration int64) (files []string, err er
 	cmd, args := CreateFileSplitCommand(fileName, path, fileExt, logFileName, segmentDuration)
 
 	mu.Lock()
-	cmdResult := exec.Command(cmd,args...)
+	cmdResult := exec.Command(cmd, args...)
 	mu.Unlock()
 
 	cmdResult.Stdout = &out
@@ -100,7 +99,7 @@ func SplitMediaFile (jobId, file string, duration int64) (files []string, err er
 	}
 
 	files, err = GetInfosFromFile(
-		WorkPath + "/" + logFileName,
+		WorkPath+"/"+logFileName,
 		"file", " ", "\n")
 
 	if err != nil {
@@ -126,7 +125,7 @@ func ReplaceFromExtByToExt(id, WorkPath, fromExt, toExt string) (err error) {
 		}
 	}
 	output := strings.Join(lines, "\n")
-	err = ioutil.WriteFile(WorkPath + "/" + id + ".ffconcat", []byte(output), 0644)
+	err = ioutil.WriteFile(WorkPath+"/"+id+".ffconcat", []byte(output), 0644)
 	if err != nil {
 		return err
 	}
@@ -134,20 +133,20 @@ func ReplaceFromExtByToExt(id, WorkPath, fromExt, toExt string) (err error) {
 	return
 }
 
-func GetFileName (file string) (name string) {
+func GetFileName(file string) (name string) {
 	directory := filepath.Dir(file)
 	ext := filepath.Ext(file)
-	name = file[len(directory) + 1:len(file) - len(ext)] //remove directory and ext from filePath
+	name = file[len(directory)+1 : len(file)-len(ext)] //remove directory and ext from filePath
 
 	return
 }
 
-func GetFileExt (file string) (ext string) {
+func GetFileExt(file string) (ext string) {
 	ext = filepath.Ext(file)
 	return
 }
 
-func GetFileDirectory (filePath string) (directory string) {
+func GetFileDirectory(filePath string) (directory string) {
 	directory = filepath.Dir(filePath)
 	return
 }
