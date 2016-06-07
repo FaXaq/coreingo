@@ -31,17 +31,13 @@ func GetInfosFromFile (filename, infoName, delimiter, dataDelimiter string) (inf
 	}
 
 	lastInput := string(buf)
-	fmt.Println(lastInput)
 
 	file.Close()
 
 	logsArray := strings.Split(lastInput, dataDelimiter)
-	fmt.Println(logsArray)
 
 	for i := len(logsArray)-1; i >= 0; i-- {
 		if strings.Contains(logsArray[i], infoName + delimiter) {
-			fmt.Println(logsArray[i])
-			fmt.Println(cap(infos))
 			infos = append(infos, strings.Trim(logsArray[i],
 				infoName + delimiter))
 		}

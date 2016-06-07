@@ -11,29 +11,40 @@ import (
 	"os" //to create directory
 	"strconv" //str conversion
 	"errors"
+	"io/ioutil"
 )
 
 type (
 	MyJob struct {
 		Id string
 		Name string
-		Command string
-		Args []string
+		Commands []string
+		Args [][]string
 		Path string
 		MediaLength int64
 		MediaFiles []string
 		FromFile string
 		ToFile string
+		ReportChannel chan *gjp.JobError
 	}
 )
 
 func NewJob (id, command, fromFile, toFile string) (j *MyJob, err error) {
 	var (
-		cmd string
-		args []string
+		cmd string //tmp command
+		cmds []string //commands array
+		args []string //args array
+		cmdsArgs [][]string //commands arguments matching commands array
+		fromFileName string
+		toExt string
+		fromExt string
+		path string //working directory
 	)
-	path := GetFileDirectory(fromFile)
+	path = GetFileDirectory(fromFile)
 	mediaLength, err := GetFileDuration(fromFile)
+	fromFileName = GetFileName(fromFile)
+	fromExt = GetFileExt(fromFile)
+	toExt = GetFileExt(toFile)
 
 	if err != nil {
 		fmt.Println("Couldn't get the file duration, set it to 0.0. Error : ",
@@ -43,22 +54,39 @@ func NewJob (id, command, fromFile, toFile string) (j *MyJob, err error) {
 	}
 
 	//create log, tmp, and output directory
-	os.Mkdir(path + "/out", 0777)
-	os.Mkdir(path + "/log", 0777)
-	os.Mkdir(path + "/tmp", 0777)
+	os.Mkdir(GetFileDirectory(path) + "/" + "out", 0777) //filepath.Div
+	os.Mkdir(LogPath + "/" + id, 0777)
+	os.Mkdir(WorkPath, 0777)
 
-	mediaFiles, splitErr := SplitMediaFile(fromFile, mediaLength)
+	mediaFiles, splitErr := SplitMediaFile(id, fromFile, mediaLength)
+	ReplaceFromExtByToExt(id, WorkPath, fromExt, toExt)
 
 	if (splitErr != nil) {
 		fmt.Println("Error during split : ", splitErr)
 	}
 
-	/* Ends here */
-
 	if command == "convert" {
-		cmd, args = CreateConvertCommand(id, path, fromFile, toFile)
+		for i := 0; i < len(mediaFiles); i++ {
+			toPartFile := fromFileName + "-" + strconv.Itoa(i) + toExt
+			cmd, args = CreateConvertCommand(id + "-" + strconv.Itoa(i),
+				path, //fromFile
+				LogPath + "/" + id, //jobLogPath
+				mediaFiles[i],
+				toPartFile)
+			cmds = append(cmds, cmd)
+			cmdsArgs = append(cmdsArgs, args)
+		}
 	} else if command == "extract-audio" {
-		cmd, args = CreateExtractAudioCommand(id, path, fromFile, toFile)
+		for i := 0; i < len(mediaFiles); i++ {
+			toPartFile := fromFileName + "-" + strconv.Itoa(i) + toExt
+			cmd, args = CreateExtractAudioCommand(id + "-" + strconv.Itoa(i),
+				path, //fromFile
+				LogPath + "/" + id, //jobLogPath
+				mediaFiles[i],
+				toPartFile)
+			cmds = append(cmds, cmd)
+			cmdsArgs = append(cmdsArgs, args)
+		}
 	} else {
 		err = errors.New("couldn't create the job, couldn't understand the query")
 		return
@@ -67,54 +95,120 @@ func NewJob (id, command, fromFile, toFile string) (j *MyJob, err error) {
 	j = &MyJob{
 		id,
 		fromFile + " to " + toFile,
-		cmd,
-		args,
+		cmds,
+		cmdsArgs,
 		path,
 		mediaLength,
 		mediaFiles,
 		fromFile,
 		toFile,
+		make(chan *gjp.JobError, 2),
 	}
 
 	return
 }
 
 func (myjob *MyJob) GetProgress(id string) (percentage float64, err error) {
-	timings, err := GetInfosFromFile(
-		myjob.Path + "/log/" + id + "-logs.gjp",
-		"out_time_ms", "=", "\n")
+	var (
+		timings []string
+		timing string
+		timingSum float64
+	)
+	jobLogPath := LogPath + "/" + id + "/"
+	files, err := ioutil.ReadDir(jobLogPath)
 
-	timingString := timings[len(timings) - 1]
+	timingSum = 0.0
 
-	if len(timingString) > 0 {
-		percentage, err = strconv.ParseFloat(timingString, 64) //get the ms timing
-		percentage /= float64(myjob.MediaLength) //divide by media length
-	} else {
-		err = errors.New("No log file or capability to find progress")
+	//retrieve all timings from files
+	for _, file := range files {
+		timingInfos, err := GetInfosFromFile(jobLogPath + file.Name(),
+			"out_time_ms", "=", "\n")
+
+		timing = timingInfos[len(timingInfos) - 1]
+
+		timings = append(timings, timing)
+
+		if err != nil {
+			fmt.Println(err.Error())
+			return timingSum, err
+		}
 	}
+
+	for i := 0; i < len(timings); i++ {
+		tmpTiming, err := strconv.ParseFloat(timings[len(timings) - 1], 64)
+		if err != nil {
+			fmt.Println(err.Error())
+			return timingSum, err
+		}
+		timingSum += tmpTiming
+	}
+
+	//get the ms timing
+	percentage = timingSum / float64(myjob.MediaLength) //divide by media length
 
 	return
 }
 
 func (myjob *MyJob) NotifyEnd(id string) {
 	fmt.Println(myjob.Name, "ended")
-	http.Get("http://127.0.0.1:8124/")
+	http.Get(CallbackEnd)
 }
 
 func (myjob *MyJob) NotifyStart(id string) {
 	fmt.Println(myjob.Name, "started")
-	http.Get("http://127.0.0.1:8124/")
+	http.Get(CallbackStart)
 }
 
 func (myjob *MyJob) ExecuteJob(id string) (err *gjp.JobError) {
-	var mu sync.Mutex
-	var out bytes.Buffer
-	var stderr bytes.Buffer
+	var (
+		mu sync.Mutex
+		out []byte
+	)
 
-	fmt.Println("command : ",myjob.Command, myjob.Args, "on file", myjob.FromFile,"of length", myjob.MediaLength)
+	for i := 0; i < len(myjob.Commands); i++ {
+		go myjob.ExecutePartialJob(myjob.Commands[i],
+			myjob.Args[i])
+	}
+
+	for i := 0; i < len(myjob.Commands); i++ {
+		err = <- myjob.ReportChannel
+		if err != nil {
+			fmt.Println("\n------\nPart", i, "of Job",id,"errored\n------\n")
+			fmt.Println(err.FmtError())
+		}
+	}
+
+	fmt.Println("finished job, now concat")
+
+	//concat file when finished
+
+	command, args := CreateConcatCommand(WorkPath + "/" + id + ".ffconcat", myjob.Path, myjob.ToFile)
+
+	fmt.Println(command, args)
 
 	mu.Lock()
-	cmd := exec.Command(myjob.Command,myjob.Args...)
+	out, cmderr := exec.Command(command,args...).Output()
+	mu.Unlock()
+
+	if cmderr != nil {
+		err = gjp.NewJobError(cmderr, string(out))
+	}
+
+	return
+}
+
+func (myjob *MyJob) ExecutePartialJob(command string, args []string) {
+	var (
+		mu sync.Mutex
+		out bytes.Buffer
+		stderr bytes.Buffer
+		err *gjp.JobError
+	)
+
+	fmt.Println(command, args)
+
+	mu.Lock()
+	cmd := exec.Command(command,args...)
 	mu.Unlock()
 
 	cmd.Stdout = &out //for debug purposes
@@ -124,13 +218,9 @@ func (myjob *MyJob) ExecuteJob(id string) (err *gjp.JobError) {
 
 	if cmderr != nil {
 		err = gjp.NewJobError(cmderr, stderr.String())
-		return
 	}
-	fmt.Println(out.String())
 
-	return
-}
+	myjob.ReportChannel <- err
 
-func ExecutePartialJob (command, file string) (executed bool, err error) {
 	return
 }

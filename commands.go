@@ -9,29 +9,33 @@ import (
 create commands
 */
 
-func CreateConvertCommand (id, path, fromFile, toFile string) (cmd string, args []string) {
+func CreateConvertCommand (id, path, logPath, fromFile, toFile string) (cmd string, args []string) {
 	cmd = "ffmpeg"
 	args = []string{
 		"-y",
 		"-i",
-		fromFile,
+		WorkPath + "/" + fromFile,
+		"-strict",
+		"-2",
 		"-progress",
-		path + "/log/" + id + "-logs.gjp",
-		path + "/out/" + toFile,
+		logPath + "/" + id + "-logs.gjp",
+		WorkPath + "/" + toFile,
 	}
 
 	return
 }
 
-func CreateExtractAudioCommand(id, path, fromFile, toFile string) (cmd string, args []string) {
+func CreateExtractAudioCommand(id, path, logPath, fromFile, toFile string) (cmd string, args []string) {
 	cmd = "ffmpeg"
 	args = []string{
 		"-y",
 		"-i",
-		fromFile,
+		WorkPath + "/" + fromFile,
+		"-strict",
+		"-2",
 		"-progress",
-		path + "/log/" + id + "-logs.gjp",
-		path + "/out/" + toFile,
+		logPath + "/" + id + "-logs.gjp",
+		WorkPath + "/" + toFile,
 	}
 
 	return
@@ -69,10 +73,26 @@ func CreateFileSplitCommand (fileName, path, fileExt, logFileName string, durati
 		"-map",
 		"0",
 		"-segment_list",
-		path + "tmp/" + logFileName,
+		WorkPath + "/" + logFileName,
 		"-segment_list_type",
 		"ffconcat",
-		path + "tmp/" + fileName + "-%d" + fileExt,
+		WorkPath + "/" + fileName + "-%d" + fileExt,
+	}
+
+	return
+}
+
+func CreateConcatCommand (inputFile, path, toFile string) (cmd string, args []string) {
+	cmd = "ffmpeg"
+	args = []string{
+		"-y",
+		"-f",
+		"concat",
+		"-i",
+		inputFile,
+		"-c",
+		"copy",
+		path + "/out/" + toFile,
 	}
 
 	return

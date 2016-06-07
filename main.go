@@ -8,12 +8,29 @@ import (
 	"log"
 )
 
+//global config variables
+var (
+	CallbackStart string
+	CallbackEnd string
+	WorkPath string
+	LogPath string
+)
+
 func main() {
+
+	err := GetEnvConfig()
+
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
 	jobPool := gjp.New(2) //create new jobPool with 2queues
+
+	jobPool.Start()
 
 	//start the jobPool
 	http.HandleFunc("/start", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, "Starting jobs again")
+		fmt.Fprintf(w, "Starting jobs")
 		jobPool.Start()
 	})
 

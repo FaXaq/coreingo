@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"strings"
 	"path/filepath"
+	"io/ioutil"
 )
 
 func GetInfosOnMediaFile (fromFile string, infos []string) (info string) {
@@ -52,7 +53,7 @@ func GetFileDuration (file string) (duration int64, err error) {
 }
 
 //split media files into 5 distinct files
-func SplitMediaFile (file string, duration int64) (files []string, err error) {
+func SplitMediaFile (jobId, file string, duration int64) (files []string, err error) {
 	fmt.Println("SplitMediaFile")
 	var (
 		mu sync.Mutex
@@ -70,7 +71,7 @@ func SplitMediaFile (file string, duration int64) (files []string, err error) {
 	path = GetFileDirectory(file) + "/"
 	fileName = GetFileName(file)
 	fileExt = GetFileExt(file)
-	logFileName = "out.list"
+	logFileName = jobId + ".ffconcat"
 
 	if duration % 5 == 0 {
 		segmentLength = (float64(duration) / 5.0)
@@ -83,8 +84,6 @@ func SplitMediaFile (file string, duration int64) (files []string, err error) {
 	segmentDuration = RoundUp(segmentLength)
 
 	cmd, args := CreateFileSplitCommand(fileName, path, fileExt, logFileName, segmentDuration)
-
-	fmt.Println(cmd, args)
 
 	mu.Lock()
 	cmdResult := exec.Command(cmd,args...)
@@ -101,14 +100,36 @@ func SplitMediaFile (file string, duration int64) (files []string, err error) {
 	}
 
 	files, err = GetInfosFromFile(
-		path + "tmp/" + logFileName,
+		WorkPath + "/" + logFileName,
 		"file", " ", "\n")
 
 	if err != nil {
 		fmt.Println(err.Error())
 	}
 
-	fmt.Println("files : ", files)
+	return
+}
+
+func ReplaceFromExtByToExt(id, WorkPath, fromExt, toExt string) (err error) {
+
+	input, err := ioutil.ReadFile(WorkPath + "/" + id + ".ffconcat") //open list
+
+	if err != nil {
+		return err
+	}
+
+	lines := strings.Split(string(input), "\n")
+
+	for i, line := range lines {
+		if strings.Contains(line, fromExt) {
+			lines[i] = strings.Replace(lines[i], fromExt, toExt, -1) //replace all occurences of old ext by new ones
+		}
+	}
+	output := strings.Join(lines, "\n")
+	err = ioutil.WriteFile(WorkPath + "/" + id + ".ffconcat", []byte(output), 0644)
+	if err != nil {
+		return err
+	}
 
 	return
 }
