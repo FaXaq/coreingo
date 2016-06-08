@@ -5,7 +5,6 @@ import (
 	"github.com/kataras/iris/config"
 	"github.com/FaXaq/gjp"
 	"log"
-	"fmt"
 )
 
 //global config variables
@@ -40,12 +39,20 @@ func main() {
 		TestPing(c)
 	})
 
-	api.Get("/job/progress", func(c *iris.Context) {
+	api.Get("/jobs/progress", func(c *iris.Context) {
 		GetMyJobProgress(c, jobPool)
 	})
 
-	api.Post("/job", func(c *iris.Context) {
+	api.Post("/jobs", func(c *iris.Context) {
 		CreateJob(c, jobPool)
+	})
+
+	api.Get("/jobs/search", func(c *iris.Context) {
+		SearchJob(c, jobPool)
+	})
+
+	api.Get("/jobs", func(c *iris.Context) {
+		ListJobs(c, jobPool)
 	})
 
 	api.Listen(":1337")

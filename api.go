@@ -74,3 +74,33 @@ func GetMyJobProgress(c *iris.Context, jobPool *gjp.JobPool) (err error) {
 
 	return
 }
+
+func SearchJob(c *iris.Context, jobPool *gjp.JobPool) (err error) {
+	if len(c.URLParams()) > 0 {
+		searchParam := c.URLParam("id")
+		j, err := jobPool.GetJobFromJobId(searchParam)
+		if err != nil {
+			c.JSON(iris.StatusInternalServerError, map[string]string{
+				"error":err.Error(),
+			})
+		} else {
+			c.JSON(iris.StatusOK, map[string]*gjp.Job{
+				"job":j,
+			})
+		}
+	} else {
+		c.JSON(iris.StatusBadRequest, map[string]string{
+			"error":"missing parameter",
+		})
+	}
+	return
+}
+
+//NYI
+func ListJobs(c *iris.Context, jobPool *gjp.JobPool) (err error) {
+	c.JSON(iris.StatusOK, map[string]*gjp.JobPool{
+		"jobs":jobPool,
+	})
+
+	return
+}
