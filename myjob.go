@@ -65,6 +65,8 @@ func NewJob(id, command, fromFile, toFile string) (j *MyJob, err error) {
 		ReplaceFromExtByToExt(id, toExt, mediaFiles)
 	}
 
+	fmt.Println(mediaFiles)
+
 	//create log, tmp, and output directory
 	os.Mkdir(path + "/" + "out", 0777) //filepath.Div
 	os.Mkdir(LogPath + "/" + id, 0777)

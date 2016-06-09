@@ -57,26 +57,32 @@ func CreateGetInfoCommand(fromFile string, infos []string) (cmd string, args []s
 func CreateFileSplitCommand(fileName, fromExt, path, toExt, logFileName string, duration int) (cmd string, args []string) {
 	cmd = "ffmpeg"
 	args = []string{
+		"-y",
 		"-i",
 		path + fileName + fromExt,
-		"-acodec",
-		"copy",
+	}
+
+	for i := 0; i < 5; i ++ {
+		args = append(args,
+			[]string{
+				"-codec",
+				"copy",
+				"-ss",
+				strconv.Itoa(duration * i),
+				"-t",
+				strconv.Itoa(duration),
+				WorkPath + "/" + fileName + "-" + strconv.Itoa(i) + toExt,
+			}...)
+	}
+
+	args = append(args, []string{
 		"-f",
 		"segment",
-		"-segment_time",
-		strconv.Itoa(duration),
-		"-vcodec",
-		"copy",
-		"-reset_timestamps",
-		"1",
-		"-map",
-		"0",
 		"-segment_list",
 		WorkPath + "/" + logFileName,
 		"-segment_list_type",
 		"ffconcat",
-		WorkPath + "/" + fileName + "-%d" + toExt,
-	}
+	}...)
 
 	return
 }

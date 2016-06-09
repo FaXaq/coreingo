@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"errors"
 )
 
 func GetInfosOnMediaFile(fromFile string, infos []string) (info string) {
@@ -114,8 +115,11 @@ func SplitMediaFile(jobId, file string, duration int64) (files []string, err err
 
 	if cmderr != nil {
 		fmt.Println("\n=======\nError applying split command\n=======\n", stderr.String())
+		err = errors.New(stderr.String())
 		return
 	}
+
+	GenerateLogFile(WorkPath + "/" + logFileName, fileName, toExt)
 
 	files, err = GetInfosFromFile(
 		WorkPath + "/" + logFileName,

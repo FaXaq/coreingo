@@ -52,9 +52,5 @@ func main() {
 		SearchJob(c, jobPool)
 	})
 
-	api.Get("/jobs", func(c *iris.Context) {
-		ListJobs(c, jobPool)
-	})
-
 	api.Listen(":" + Port)
 }

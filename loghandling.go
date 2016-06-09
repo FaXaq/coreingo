@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"strconv"
 )
 
 func GetInfosFromFile(filename, infoName, delimiter, dataDelimiter string) (infos []string, err error) {
@@ -44,4 +45,17 @@ func GetInfosFromFile(filename, infoName, delimiter, dataDelimiter string) (info
 	}
 
 	return
+}
+
+func GenerateLogFile(logFileName, fileName, fileExt string) {
+	file, err := os.Create(logFileName)
+
+	if err != nil {
+		fmt.Println("Error while create logfile")
+	}
+
+	file.Write([]byte("ffconcat version 1.0\n"))
+	for i := 0; i < 5; i++ {
+		file.Write([]byte("file " + fileName + "-" + strconv.Itoa(i) + fileExt + "\n"))
+	}
 }
