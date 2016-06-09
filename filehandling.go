@@ -64,6 +64,7 @@ func SplitMediaFile(jobId, file string, duration int64) (files []string, err err
 		fileExt         string
 		fileName        string
 		logFileName     string
+		toExt string
 	)
 
 	if duration == 0.0 {
@@ -77,6 +78,15 @@ func SplitMediaFile(jobId, file string, duration int64) (files []string, err err
 	path = GetFileDirectory(file) + "/"
 	fileName = GetFileName(file)
 	fileExt = GetFileExt(file)
+	if fileExt == "" {
+		toExts := strings.Split(GetInfosOnMediaFile(file, []string{
+			"format_name",
+		}), ",")
+		toExt = "." + toExts[0]
+	} else {
+		toExt = fileExt
+	}
+
 	logFileName = jobId + ".ffconcat"
 
 	if duration%5 == 0 {
@@ -89,7 +99,9 @@ func SplitMediaFile(jobId, file string, duration int64) (files []string, err err
 	segmentLength /= 1000000.0
 	segmentDuration = RoundUp(segmentLength)
 
-	cmd, args := CreateFileSplitCommand(fileName, path, fileExt, logFileName, segmentDuration)
+	cmd, args := CreateFileSplitCommand(fileName, fileExt, path, toExt, logFileName, segmentDuration)
+
+	fmt.Println(cmd,args)
 
 	mu.Lock()
 	cmdResult := exec.Command(cmd, args...)
@@ -101,7 +113,7 @@ func SplitMediaFile(jobId, file string, duration int64) (files []string, err err
 	cmderr := cmdResult.Run()
 
 	if cmderr != nil {
-		fmt.Println(stderr)
+		fmt.Println("\n=======\nError applying split command\n=======\n", stderr.String())
 		return
 	}
 
@@ -110,7 +122,7 @@ func SplitMediaFile(jobId, file string, duration int64) (files []string, err err
 		"file", " ", "\n")
 
 	if err != nil {
-		fmt.Println(err.Error())
+		fmt.Println("Couldn't get infos from file", err.Error())
 	}
 
 	return
