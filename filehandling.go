@@ -66,6 +66,13 @@ func SplitMediaFile(jobId, file string, duration int64) (files []string, err err
 		logFileName     string
 	)
 
+	if duration == 0.0 {
+		files = []string{
+			file,
+		}
+
+		return
+	}
 	//retrieve file informations
 	path = GetFileDirectory(file) + "/"
 	fileName = GetFileName(file)
@@ -99,7 +106,7 @@ func SplitMediaFile(jobId, file string, duration int64) (files []string, err err
 	}
 
 	files, err = GetInfosFromFile(
-		WorkPath+"/"+logFileName,
+		WorkPath + "/" + logFileName,
 		"file", " ", "\n")
 
 	if err != nil {
@@ -109,7 +116,7 @@ func SplitMediaFile(jobId, file string, duration int64) (files []string, err err
 	return
 }
 
-func ReplaceFromExtByToExt(id, WorkPath, fromExt, toExt string) (err error) {
+func ReplaceFromExtByToExt(id, toExt string, mediaFiles []string) (err error) {
 
 	input, err := ioutil.ReadFile(WorkPath + "/" + id + ".ffconcat") //open list
 
@@ -120,12 +127,17 @@ func ReplaceFromExtByToExt(id, WorkPath, fromExt, toExt string) (err error) {
 	lines := strings.Split(string(input), "\n")
 
 	for i, line := range lines {
-		if strings.Contains(line, fromExt) {
-			lines[i] = strings.Replace(lines[i], fromExt, toExt, -1) //replace all occurences of old ext by new ones
+		for _, file := range mediaFiles {
+			if strings.Contains(line, file) {
+				lines[i] = strings.Replace(lines[i],
+					file,
+					GetFileName(file) + toExt,
+					-1) //replace all occurences of old ext by new ones
+			}
 		}
 	}
 	output := strings.Join(lines, "\n")
-	err = ioutil.WriteFile(WorkPath+"/"+id+".ffconcat", []byte(output), 0644)
+	err = ioutil.WriteFile(WorkPath + "/" + id + ".ffconcat", []byte(output), 0644)
 	if err != nil {
 		return err
 	}
@@ -136,8 +148,11 @@ func ReplaceFromExtByToExt(id, WorkPath, fromExt, toExt string) (err error) {
 func GetFileName(file string) (name string) {
 	directory := filepath.Dir(file)
 	ext := filepath.Ext(file)
-	name = file[len(directory)+1 : len(file)-len(ext)] //remove directory and ext from filePath
-
+	if (len(directory) > 1) {
+		name = file[len(directory)+1 : len(file)-len(ext)] //remove directory and ext from filePath
+	} else {
+		name = file[:len(file)-len(ext)]
+	}
 	return
 }
 

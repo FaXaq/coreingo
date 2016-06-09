@@ -25,6 +25,7 @@ type (
 		FromFile      string
 		ToFile        string
 		ReportChannel chan *gjp.JobError
+		Splitted bool
 	}
 )
 
@@ -34,42 +35,47 @@ func NewJob(id, command, fromFile, toFile string) (j *MyJob, err error) {
 		cmds         []string   //commands array
 		args         []string   //args array
 		cmdsArgs     [][]string //commands arguments matching commands array
-		fromFileName string
 		toExt        string
-		fromExt      string
 		path         string //working directory
+		splitted bool
+		mediaFiles []string
 	)
+
 	path = GetFileDirectory(fromFile)
 	mediaLength, err := GetFileDuration(fromFile)
-	fromFileName = GetFileName(fromFile)
-	fromExt = GetFileExt(fromFile)
 	toExt = GetFileExt(toFile)
 
 	if err != nil {
 		fmt.Println("Couldn't get the file duration, set it to 0.0. Error : ",
 			err.Error())
+		splitted = false
 	} else {
 		fmt.Println("File duration is : ", mediaLength, "µs")
+		splitted = true
 	}
 
-	//create log, tmp, and output directory
-	os.Mkdir(GetFileDirectory(path)+"/"+"out", 0777) //filepath.Div
-	os.Mkdir(LogPath+"/"+id, 0777)
-	os.Mkdir(WorkPath, 0777)
 
 	mediaFiles, splitErr := SplitMediaFile(id, fromFile, mediaLength)
-	ReplaceFromExtByToExt(id, WorkPath, fromExt, toExt)
 
 	if splitErr != nil {
 		fmt.Println("Error during split : ", splitErr)
 	}
 
+	if len(mediaFiles) > 1 {
+		ReplaceFromExtByToExt(id, toExt, mediaFiles)
+	}
+
+	//create log, tmp, and output directory
+	os.Mkdir(path + "/" + "out", 0777) //filepath.Div
+	os.Mkdir(LogPath + "/" + id, 0777)
+	os.Mkdir(WorkPath, 0777)
+
 	if command == "convert" {
 		for i := 0; i < len(mediaFiles); i++ {
-			toPartFile := fromFileName + "-" + strconv.Itoa(i) + toExt
-			cmd, args = CreateConvertCommand(id+"-"+strconv.Itoa(i),
+			toPartFile := GetFileName(mediaFiles[i]) + toExt
+			cmd, args = CreateConvertCommand(GetFileName(mediaFiles[i]),
 				path,           //fromFile
-				LogPath+"/"+id, //jobLogPath
+				LogPath + "/" + id, //jobLogPath
 				mediaFiles[i],
 				toPartFile)
 			cmds = append(cmds, cmd)
@@ -77,10 +83,10 @@ func NewJob(id, command, fromFile, toFile string) (j *MyJob, err error) {
 		}
 	} else if command == "extract-audio" {
 		for i := 0; i < len(mediaFiles); i++ {
-			toPartFile := fromFileName + "-" + strconv.Itoa(i) + toExt
-			cmd, args = CreateExtractAudioCommand(id+"-"+strconv.Itoa(i),
+			toPartFile := GetFileName(mediaFiles[i]) + toExt
+			cmd, args = CreateExtractAudioCommand(GetFileName(mediaFiles[i]),
 				path,           //fromFile
-				LogPath+"/"+id, //jobLogPath
+				LogPath + "/" + id, //jobLogPath
 				mediaFiles[i],
 				toPartFile)
 			cmds = append(cmds, cmd)
@@ -102,6 +108,7 @@ func NewJob(id, command, fromFile, toFile string) (j *MyJob, err error) {
 		fromFile,
 		toFile,
 		make(chan *gjp.JobError, 2),
+		splitted,
 	}
 
 	return
@@ -173,9 +180,12 @@ func (myjob *MyJob) NotifyEnd(j *gjp.Job) {
 }
 
 func (myjob *MyJob) NotifyStart(j *gjp.Job) {
-	fmt.Println("Notifying end of job ", j.GetJobId(), ":>", CallbackStart)
+	fmt.Println("Notifying start of job ", j.GetJobId(), ":>", CallbackStart)
 
 	jobson, _ := j.GetJobInfos()
+
+	fmt.Println(string(jobson))
+
 	req, err := http.NewRequest("POST", CallbackStart, bytes.NewBuffer(jobson))
 	req.Header.Set("Content-Type", "application/json")
 
@@ -216,6 +226,10 @@ func (myjob *MyJob) ExecuteJob(j *gjp.Job) (err *gjp.JobError) {
 	}
 
 	fmt.Println("finished job, now concat")
+
+	if myjob.Splitted == false {
+		return
+	}
 
 	//concat file when finished
 
