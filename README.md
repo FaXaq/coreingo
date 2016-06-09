@@ -2,13 +2,11 @@
 
 Pour deploy : 
 
-installer go !
+installer go 1.6 mini
 
 `go get -u github.com/kataras/iris` & `go get -u github.com/FaXaq/gjp` et ensuite `go get github.com/FaXaq/coreingo` puis `go run go.go` pour lancer le fichier, sinon `go build go.go` pour compiler le fichier !
 Installez les dépendances !
 Et ... c'est à peu près tout, pour le moment ce que ça fait :
-
-Le webserver est sur localhost:8000
 
 * `POST /jobs` pour créer un job peut-être utilisé avec les arguments suivants :
   * `command` quelle commande sà exécuter (`extract-audio` et `convert`)
