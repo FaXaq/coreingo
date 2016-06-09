@@ -6,8 +6,7 @@ import (
 	"fmt"                  //format for console logs
 	"github.com/FaXaq/gjp" //custom library for jobs
 	"io/ioutil"
-	"net/http"         //web services
-	_ "net/http/pprof" //get http logs
+	"net/http"
 	"os"               //to create directory
 	"os/exec"          //command execs
 	"strconv"          //str conversion
@@ -150,13 +149,51 @@ func (myjob *MyJob) GetProgress(id string) (percentage float64, err error) {
 }
 
 func (myjob *MyJob) NotifyEnd(j *gjp.Job) {
-	fmt.Println(myjob.Name, "ended")
-	http.Get(CallbackEnd)
+	fmt.Println("Notifying end of job ", j.GetJobId(), ":>", CallbackEnd)
+
+	jobson, _ := j.GetJobInfos()
+	req, err := http.NewRequest("POST", CallbackEnd, bytes.NewBuffer(jobson))
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Println("error while getting response from NotifyEnd",
+			err.Error())
+		return
+	}
+	defer resp.Body.Close()
+
+
+	if resp.Status == "200" {
+		fmt.Println("Notified end job")
+	} else {
+		fmt.Println("Couldn't notify end job")
+	}
 }
 
 func (myjob *MyJob) NotifyStart(j *gjp.Job) {
-	fmt.Println(myjob.Name, "started")
-	http.Get(CallbackStart)
+	fmt.Println("Notifying end of job ", j.GetJobId(), ":>", CallbackStart)
+
+	jobson, _ := j.GetJobInfos()
+	req, err := http.NewRequest("POST", CallbackStart, bytes.NewBuffer(jobson))
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Println("error while getting response from NotifyEnd",
+			err.Error())
+		return
+	}
+	defer resp.Body.Close()
+
+
+	if resp.Status == "200" {
+		fmt.Println("Notified end job")
+	} else {
+		fmt.Println("Couldn't notify end job")
+	}
 }
 
 func (myjob *MyJob) ExecuteJob(j *gjp.Job) (err *gjp.JobError) {

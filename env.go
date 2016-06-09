@@ -31,5 +31,11 @@ func GetEnvConfig() (err error) {
 		return
 	}
 
+	Port = os.Getenv("GJP_PORT")
+	if Port == "" {
+		err = errors.New("Couldn't get GJP_PORT env variable")
+		return
+	}
+
 	return
 }

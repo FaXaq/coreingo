@@ -13,6 +13,7 @@ var (
 	CallbackEnd   string
 	WorkPath      string
 	LogPath       string
+	Port string
 )
 
 func main() {
@@ -55,5 +56,5 @@ func main() {
 		ListJobs(c, jobPool)
 	})
 
-	api.Listen(":1337")
+	api.Listen(":" + Port)
 }
