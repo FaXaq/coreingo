@@ -37,9 +37,9 @@ func GetInfosFromFile(filename, infoName, delimiter, dataDelimiter string) (info
 	logsArray := strings.Split(lastInput, dataDelimiter)
 
 	for i := len(logsArray) - 1; i >= 0; i-- {
-		if strings.Contains(logsArray[i], infoName+delimiter) {
-			infos = append(infos, strings.Trim(logsArray[i],
-				infoName+delimiter))
+		if strings.Contains(logsArray[i], infoName + delimiter) {
+			infos = append(infos, strings.TrimLeft(logsArray[i],
+				infoName + delimiter))
 		}
 	}
 
