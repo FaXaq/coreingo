@@ -4,6 +4,7 @@ Pour deploy :
 
 installer go !
 
+`go get github.com/kataras/iris` & `go get github.com/FaXaq/iris`
 et ensuite `go get github.com/FaXaq/coreingo` puis `go run go.go` pour lancer le fichier, sinon `go build go.go` pour compiler le fichier !
 Installez les dépendances !
 Et ... c'est à peu près tout, pour le moment ce que ça fait :
