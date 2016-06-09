@@ -4,7 +4,7 @@ Pour deploy :
 
 installer go 1.6 mini
 
-`go get -u github.com/kataras/iris` & `go get -u github.com/FaXaq/gjp` et ensuite `go get github.com/FaXaq/coreingo` puis `go run go.go` pour lancer le fichier, sinon `go build go.go` pour compiler le fichier !
+`go get -u github.com/kataras/iris` & `go get -u github.com/FaXaq/gjp` et ensuite `go get github.com/FaXaq/coreingo` puis `go run *.go` pour lancer le fichier, sinon `go build *.go` pour compiler le fichier !
 Installez les dépendances !
 Et ... c'est à peu près tout, pour le moment ce que ça fait :
 
@@ -17,4 +17,6 @@ Et ... c'est à peu près tout, pour le moment ce que ça fait :
   * `id` job id
 * `GET /jobs/progress` Arrête la jobPool
   * `id` job id
+
+
 TADAM
