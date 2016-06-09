@@ -149,17 +149,17 @@ func (myjob *MyJob) GetProgress(id string) (percentage float64, err error) {
 	return
 }
 
-func (myjob *MyJob) NotifyEnd(id string) {
+func (myjob *MyJob) NotifyEnd(j *gjp.Job) {
 	fmt.Println(myjob.Name, "ended")
 	http.Get(CallbackEnd)
 }
 
-func (myjob *MyJob) NotifyStart(id string) {
+func (myjob *MyJob) NotifyStart(j *gjp.Job) {
 	fmt.Println(myjob.Name, "started")
 	http.Get(CallbackStart)
 }
 
-func (myjob *MyJob) ExecuteJob(id string) (err *gjp.JobError) {
+func (myjob *MyJob) ExecuteJob(j *gjp.Job) (err *gjp.JobError) {
 	var (
 		mu  sync.Mutex
 		out []byte
@@ -173,7 +173,7 @@ func (myjob *MyJob) ExecuteJob(id string) (err *gjp.JobError) {
 	for i := 0; i < len(myjob.Commands); i++ {
 		err = <-myjob.ReportChannel
 		if err != nil {
-			fmt.Println("\n------\nPart", i, "of Job", id, "errored\n------\n")
+			fmt.Println("\n------\nPart", i, "of Job", j.GetJobId(), "errored\n------\n")
 			fmt.Println(err.FmtError())
 		}
 	}
@@ -182,7 +182,7 @@ func (myjob *MyJob) ExecuteJob(id string) (err *gjp.JobError) {
 
 	//concat file when finished
 
-	command, args := CreateConcatCommand(WorkPath+"/"+id+".ffconcat", myjob.Path, myjob.ToFile)
+	command, args := CreateConcatCommand(WorkPath + "/" + j.GetJobId() + ".ffconcat", myjob.Path, myjob.ToFile)
 
 	fmt.Println(command, args)
 
