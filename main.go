@@ -1,9 +1,9 @@
 package main
 
 import (
+	"github.com/FaXaq/gjp"
 	"github.com/kataras/iris"
 	"github.com/kataras/iris/config"
-	"github.com/FaXaq/gjp"
 	"log"
 )
 
@@ -13,7 +13,7 @@ var (
 	CallbackEnd   string
 	WorkPath      string
 	LogPath       string
-	Port string
+	Port          string
 )
 
 func main() {
@@ -27,11 +27,10 @@ func main() {
 	jobPool := gjp.New(3)
 	jobPool.Start()
 
-
 	api := iris.New()
 
-	restConfig := config.Rest {
-		IndentJSON : true,
+	restConfig := config.Rest{
+		IndentJSON: true,
 	}
 
 	api.Config().Render.Rest = restConfig

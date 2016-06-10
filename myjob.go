@@ -7,10 +7,10 @@ import (
 	"github.com/FaXaq/gjp" //custom library for jobs
 	"io/ioutil"
 	"net/http"
-	"os"               //to create directory
-	"os/exec"          //command execs
-	"strconv"          //str conversion
-	"sync"             //command sync
+	"os"      //to create directory
+	"os/exec" //command execs
+	"strconv" //str conversion
+	"sync"    //command sync
 )
 
 type (
@@ -25,19 +25,19 @@ type (
 		FromFile      string
 		ToFile        string
 		ReportChannel chan *gjp.JobError
-		Splitted bool
+		Splitted      bool
 	}
 )
 
 func NewJob(id, command, fromFile, toFile string) (j *MyJob, err error) {
 	var (
-		cmd          string     //tmp command
-		cmds         []string   //commands array
-		args         []string   //args array
-		cmdsArgs     [][]string //commands arguments matching commands array
-		toExt        string
-		path         string //working directory
-		splitted bool
+		cmd        string     //tmp command
+		cmds       []string   //commands array
+		args       []string   //args array
+		cmdsArgs   [][]string //commands arguments matching commands array
+		toExt      string
+		path       string //working directory
+		splitted   bool
 		mediaFiles []string
 	)
 
@@ -54,7 +54,6 @@ func NewJob(id, command, fromFile, toFile string) (j *MyJob, err error) {
 		splitted = true
 	}
 
-
 	mediaFiles, splitErr := SplitMediaFile(id, fromFile, mediaLength)
 
 	if splitErr != nil {
@@ -68,8 +67,8 @@ func NewJob(id, command, fromFile, toFile string) (j *MyJob, err error) {
 	fmt.Println(mediaFiles)
 
 	//create log, tmp, and output directory
-	os.Mkdir(path + "/" + "out", 0777) //filepath.Div
-	os.Mkdir(LogPath + "/" + id, 0777)
+	os.Mkdir(path+"/"+"out", 0777) //filepath.Div
+	os.Mkdir(LogPath+"/"+id, 0777)
 	os.Mkdir(WorkPath, 0777)
 
 	if command == "convert" {
@@ -77,7 +76,7 @@ func NewJob(id, command, fromFile, toFile string) (j *MyJob, err error) {
 			toPartFile := GetFileName(mediaFiles[i]) + toExt
 			cmd, args = CreateConvertCommand(GetFileName(mediaFiles[i]),
 				path,           //fromFile
-				LogPath + "/" + id, //jobLogPath
+				LogPath+"/"+id, //jobLogPath
 				mediaFiles[i],
 				toPartFile)
 			cmds = append(cmds, cmd)
@@ -88,7 +87,7 @@ func NewJob(id, command, fromFile, toFile string) (j *MyJob, err error) {
 			toPartFile := GetFileName(mediaFiles[i]) + toExt
 			cmd, args = CreateExtractAudioCommand(GetFileName(mediaFiles[i]),
 				path,           //fromFile
-				LogPath + "/" + id, //jobLogPath
+				LogPath+"/"+id, //jobLogPath
 				mediaFiles[i],
 				toPartFile)
 			cmds = append(cmds, cmd)
@@ -173,7 +172,6 @@ func (myjob *MyJob) NotifyEnd(j *gjp.Job) {
 	}
 	defer resp.Body.Close()
 
-
 	if resp.Status == "200" {
 		fmt.Println("Notified end job")
 	} else {
@@ -199,7 +197,6 @@ func (myjob *MyJob) NotifyStart(j *gjp.Job) {
 		return
 	}
 	defer resp.Body.Close()
-
 
 	if resp.Status == "200" {
 		fmt.Println("Notified end job")
@@ -234,8 +231,7 @@ func (myjob *MyJob) ExecuteJob(j *gjp.Job) (err *gjp.JobError) {
 	}
 
 	//concat file when finished
-
-	command, args := CreateConcatCommand(WorkPath + "/" + j.GetJobId() + ".ffconcat", myjob.Path, myjob.ToFile)
+	command, args := CreateConcatCommand(WorkPath+"/"+j.GetJobId()+".ffconcat", myjob.Path, myjob.ToFile)
 
 	fmt.Println(command, args)
 
@@ -247,7 +243,20 @@ func (myjob *MyJob) ExecuteJob(j *gjp.Job) (err *gjp.JobError) {
 		err = gjp.NewJobError(cmderr, string(out))
 	}
 
-	removeErr := RemoveFilesFromWorkDir(append(myjob.MediaFiles, j.GetJobId() + ".ffconcat"))
+	//retrieve new file names and add them to media files of the job
+	newMediaFiles, newMediaFilesErr :=
+		GetInfosFromFile(WorkPath+"/"+j.GetJobId()+".ffconcat", "file", " ", "\n")
+
+	if newMediaFilesErr != nil {
+		err = gjp.NewJobError(newMediaFilesErr, newMediaFilesErr.Error())
+	}
+
+	for _, newMediaFile := range newMediaFiles {
+		myjob.MediaFiles = append(myjob.MediaFiles, newMediaFile)
+	}
+
+	//remove all tmp files
+	removeErr := RemoveFilesFromWorkDir(append(myjob.MediaFiles, j.GetJobId()+".ffconcat"))
 
 	if removeErr != nil {
 		err = gjp.NewJobError(removeErr, removeErr.Error())

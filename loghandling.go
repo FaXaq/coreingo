@@ -4,8 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"strings"
 	"strconv"
+	"strings"
 )
 
 func GetInfosFromFile(filename, infoName, delimiter, dataDelimiter string) (infos []string, err error) {
@@ -38,8 +38,8 @@ func GetInfosFromFile(filename, infoName, delimiter, dataDelimiter string) (info
 	logsArray := strings.Split(lastInput, dataDelimiter)
 
 	for i := len(logsArray) - 1; i >= 0; i-- {
-		if strings.Contains(logsArray[i], infoName + delimiter) {
-			infos = append(infos, logsArray[i][len(infoName) + len(delimiter):])
+		if strings.Contains(logsArray[i], infoName+delimiter) {
+			infos = append(infos, logsArray[i][len(infoName)+len(delimiter):])
 		}
 	}
 

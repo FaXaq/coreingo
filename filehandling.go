@@ -2,15 +2,15 @@ package main
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io/ioutil"
-	"os/exec"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strconv"
 	"strings"
 	"sync"
-	"errors"
 )
 
 func GetInfosOnMediaFile(fromFile string, infos []string) (info string) {
@@ -66,7 +66,7 @@ func SplitMediaFile(jobId, file string, duration int64) (files []string, err err
 		fileExt         string
 		fileName        string
 		logFileName     string
-		toExt string
+		toExt           string
 	)
 
 	if duration == 0.0 {
@@ -81,7 +81,7 @@ func SplitMediaFile(jobId, file string, duration int64) (files []string, err err
 	fileName = GetFileName(file)
 	fileExt = GetFileExt(file)
 
-	fmt.Println(path,fileName,fileExt,jobId)
+	fmt.Println(path, fileName, fileExt, jobId)
 	if fileExt == "" {
 		toExts := strings.Split(GetInfosOnMediaFile(file, []string{
 			"format_name",
@@ -103,9 +103,9 @@ func SplitMediaFile(jobId, file string, duration int64) (files []string, err err
 	segmentLength /= 1000000.0
 	segmentDuration = RoundUp(segmentLength)
 
-	cmd, args := CreateFileSplitCommand(fileName, fileExt, path, toExt, logFileName, segmentDuration)
+	cmd, args := CreateFileSplitCommand(fileName, fileExt, path, jobId, toExt, logFileName, segmentDuration)
 
-	fmt.Println(cmd,args)
+	fmt.Println(cmd, args)
 
 	mu.Lock()
 	cmdResult := exec.Command(cmd, args...)
@@ -122,10 +122,10 @@ func SplitMediaFile(jobId, file string, duration int64) (files []string, err err
 		return
 	}
 
-	GenerateLogFile(WorkPath + "/" + logFileName, fileName, toExt)
+	GenerateLogFile(WorkPath+"/"+logFileName, jobId, toExt)
 
 	files, err = GetInfosFromFile(
-		WorkPath + "/" + logFileName,
+		WorkPath+"/"+logFileName,
 		"file", " ", "\n")
 
 	if err != nil {
@@ -150,13 +150,13 @@ func ReplaceFromExtByToExt(id, toExt string, mediaFiles []string) (err error) {
 			if strings.Contains(line, file) {
 				lines[i] = strings.Replace(lines[i],
 					file,
-					GetFileName(file) + toExt,
+					GetFileName(file)+toExt,
 					-1) //replace all occurences of old ext by new ones
 			}
 		}
 	}
 	output := strings.Join(lines, "\n")
-	err = ioutil.WriteFile(WorkPath + "/" + id + ".ffconcat", []byte(output), 0644)
+	err = ioutil.WriteFile(WorkPath+"/"+id+".ffconcat", []byte(output), 0644)
 	if err != nil {
 		return err
 	}
@@ -167,7 +167,7 @@ func ReplaceFromExtByToExt(id, toExt string, mediaFiles []string) (err error) {
 func GetFileName(file string) (name string) {
 	directory := filepath.Dir(file)
 	ext := filepath.Ext(file)
-	if (len(directory) > 1) {
+	if len(directory) > 1 {
 		name = file[len(directory)+1 : len(file)-len(ext)] //remove directory and ext from filePath
 	} else {
 		name = file[:len(file)-len(ext)]
