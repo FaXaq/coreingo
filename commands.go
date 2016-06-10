@@ -19,8 +19,15 @@ func CreateConvertCommand(id, path, logPath, fromFile, toFile string) (cmd strin
 		"-2",
 		"-progress",
 		logPath + "/" + id + "-logs.gjp",
-		WorkPath + "/" + toFile,
 	}
+
+	if GetFileExt(toFile) == ".flv" || GetFileExt(fromFile) == ".flv" {
+		args = append(args, "-c:v")
+		args = append(args, "libx264")
+	}
+
+	args = append(args,
+		WorkPath + "/" + toFile)
 
 	return
 }
@@ -74,15 +81,6 @@ func CreateFileSplitCommand(fileName, fromExt, path, toFileName, toExt, logFileN
 				WorkPath + "/" + toFileName + "-" + strconv.Itoa(i) + toExt,
 			}...)
 	}
-
-	args = append(args, []string{
-		"-f",
-		"segment",
-		"-segment_list",
-		WorkPath + "/" + logFileName,
-		"-segment_list_type",
-		"ffconcat",
-	}...)
 
 	return
 }

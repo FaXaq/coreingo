@@ -201,7 +201,7 @@ func (myjob *MyJob) NotifyStart(j *gjp.Job) {
 	if resp.Status == "200" {
 		fmt.Println("Notified end job")
 	} else {
-		fmt.Println("Couldn't notify end job")
+		fmt.Println("Couldn't notify start job")
 	}
 }
 
