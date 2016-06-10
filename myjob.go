@@ -247,6 +247,12 @@ func (myjob *MyJob) ExecuteJob(j *gjp.Job) (err *gjp.JobError) {
 		err = gjp.NewJobError(cmderr, string(out))
 	}
 
+	removeErr := RemoveFilesFromWorkDir(append(myjob.MediaFiles, j.GetJobId() + ".ffconcat"))
+
+	if removeErr != nil {
+		err = gjp.NewJobError(removeErr, removeErr.Error())
+	}
+
 	return
 }
 

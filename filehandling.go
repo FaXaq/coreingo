@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os/exec"
+	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -79,6 +80,8 @@ func SplitMediaFile(jobId, file string, duration int64) (files []string, err err
 	path = GetFileDirectory(file) + "/"
 	fileName = GetFileName(file)
 	fileExt = GetFileExt(file)
+
+	fmt.Println(path,fileName,fileExt,jobId)
 	if fileExt == "" {
 		toExts := strings.Split(GetInfosOnMediaFile(file, []string{
 			"format_name",
@@ -179,5 +182,15 @@ func GetFileExt(file string) (ext string) {
 
 func GetFileDirectory(filePath string) (directory string) {
 	directory = filepath.Dir(filePath)
+	return
+}
+
+func RemoveFilesFromWorkDir(files []string) (err error) {
+	fmt.Println(files)
+
+	for _, file := range files {
+		err = os.Remove(WorkPath + "/" + file)
+	}
+
 	return
 }
