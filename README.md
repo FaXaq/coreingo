@@ -14,7 +14,7 @@ Voici les API disponibles :
   * `fromFile` chemin vers le fichier en input (ex: /home/user/Downloads/toto.mp4)
   * `toFile` nom et extension du fichier (ex: giphy.mkv)
   * Retourne un JSON contenant le job serialisé : 
-```
+``` json
 {
   "job": {
     "id": "9168fb1c-d488-4bdb-a0c8-ef97617bcf33",
@@ -28,7 +28,7 @@ Voici les API disponibles :
 * `GET /jobs/search` donne une liste d'infos sur les jobs
   * `id` job id
   * Retourne un JSON contenant le job serialisé :
-```
+``` json
 {
    "id": "9168fb1c-d488-4bdb-a0c8-ef97617bcf33",
    "name": "<path_to_file>/guitar to test.mp3",
@@ -40,7 +40,7 @@ Voici les API disponibles :
 * `GET /jobs/progress` Arrête la jobPool
   * `id` job id
   * Retourne un JSON contenant uniquement la propriété percentage :
-```
+``` json
 {
    "percentage": 0.052427342648
 }
