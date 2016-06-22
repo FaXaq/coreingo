@@ -192,7 +192,7 @@ func (myjob *MyJob) NotifyStart(j *gjp.Job) {
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		fmt.Println("error while getting response from NotifyEnd",
+		fmt.Println("error while getting response from NotifyStart",
 			err.Error())
 		return
 	}
