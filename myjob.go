@@ -41,6 +41,8 @@ func NewJob(id, command, fromFile, toFile string) (j *MyJob, err error) {
 		mediaFiles []string
 	)
 
+	fmt.Println("test")
+
 	path = GetFileDirectory(fromFile)
 	mediaLength, err := GetFileDuration(fromFile)
 	toExt = GetFileExt(toFile)
@@ -67,8 +69,8 @@ func NewJob(id, command, fromFile, toFile string) (j *MyJob, err error) {
 	fmt.Println(mediaFiles)
 
 	//create log, tmp, and output directory
-	os.Mkdir(path+"/"+"out", 0777) //filepath.Div
-	os.Mkdir(LogPath+"/"+id, 0777)
+	os.Mkdir(path + "/" + "out", 0777) //filepath.Div
+	os.Mkdir(LogPath + "/" + id, 0777)
 	os.Mkdir(WorkPath, 0777)
 
 	if command == "convert" {
@@ -172,7 +174,7 @@ func (myjob *MyJob) NotifyEnd(j *gjp.Job) {
 	}
 	defer resp.Body.Close()
 
-	if resp.Status == "200" {
+	if resp.StatusCode == 200 {
 		fmt.Println("Notified end job")
 	} else {
 		fmt.Println("Couldn't notify end job")
@@ -198,7 +200,7 @@ func (myjob *MyJob) NotifyStart(j *gjp.Job) {
 	}
 	defer resp.Body.Close()
 
-	if resp.Status == "200" {
+	if resp.StatusCode == 200 {
 		fmt.Println("Notified end job")
 	} else {
 		fmt.Println("Couldn't notify start job")

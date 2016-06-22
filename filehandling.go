@@ -30,7 +30,7 @@ func GetInfosOnMediaFile(fromFile string, infos []string) (info string) {
 	cmderr := cmdResult.Run()
 
 	if cmderr != nil {
-		fmt.Println(cmderr)
+		fmt.Println(cmderr, stderr.String())
 		return
 	}
 
@@ -93,7 +93,23 @@ func SplitMediaFile(jobId, file string, duration int64) (files []string, err err
 
 	logFileName = jobId + ".ffconcat"
 
-	if duration%5 == 0 {
+	if duration < 10000000 {
+		fmt.Println("generate logfile")
+		GenerateLogFile(WorkPath+"/"+logFileName, jobId + toExt, toExt, false)
+
+		fmt.Println("move file to tmp")
+		MoveFileToTmp(jobId, path, fileName, fileExt)
+
+		files, err = GetInfosFromFile(
+			WorkPath+"/"+logFileName,
+			"file", " ", "\n")
+
+		if err != nil {
+			fmt.Println("Couldn't get infos from file", err.Error())
+		}
+
+		return files, err
+	} else if duration%5 == 0 {
 		segmentLength = (float64(duration) / 5.0)
 	} else {
 		segmentLength = (float64(duration) / 5.0) + 1.0 //add the rest of the division to segment
@@ -122,7 +138,7 @@ func SplitMediaFile(jobId, file string, duration int64) (files []string, err err
 		return
 	}
 
-	GenerateLogFile(WorkPath+"/"+logFileName, jobId, toExt)
+	GenerateLogFile(WorkPath+"/"+logFileName, jobId, toExt, true)
 
 	files, err = GetInfosFromFile(
 		WorkPath+"/"+logFileName,
@@ -186,10 +202,30 @@ func GetFileDirectory(filePath string) (directory string) {
 }
 
 func RemoveFilesFromWorkDir(files []string) (err error) {
-	fmt.Println(files)
+	// fmt.Println("Removing :", files)
 
-	for _, file := range files {
-		err = os.Remove(WorkPath + "/" + file)
+	// for _, file := range files {
+	// 	err = os.Remove(WorkPath + "/" + file)
+	// }
+
+	return
+}
+
+func MoveFileToTmp(jobId, path, file, ext string) (err error) {
+	if ext != "" {
+		os.Rename(path + file + ext,
+			WorkPath + "/" + jobId + ext)
+
+		fmt.Println("Move file from", path + file + ext, "to", WorkPath + "/" + jobId + ext)
+	} else {
+		toExts := strings.Split(GetInfosOnMediaFile(path + file, []string{
+			"format_name",
+		}), ",")
+
+		fmt.Println("Move file from", path + file + ext, "to", WorkPath + "/" + file + "." + toExts[0])
+
+		os.Rename(path + file + ext,
+			WorkPath + "/" + jobId + "." + toExts[0])
 	}
 
 	return
