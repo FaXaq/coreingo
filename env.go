@@ -8,7 +8,7 @@ import (
 )
 
 func GetEnvConfig() (err error) {
-	fmt.Pritln("=== Config ===")
+	fmt.Println("=== Config ===")
 
 	CallbackStart = os.Getenv("GJP_STARTJOB_CALLBACK")
 	if CallbackStart == "" {
