@@ -153,6 +153,8 @@ func (myjob *MyJob) GetProgress(id string) (percentage float64, err error) {
 	//get the ms timing
 	percentage = timingSum / float64(myjob.MediaLength) //divide by media length
 
+	fmt.Println("Progress for job", myjob.Id, ":", percentage)
+
 	return
 }
 
@@ -166,7 +168,7 @@ func (myjob *MyJob) NotifyEnd(j *gjp.Job) {
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		fmt.Println("error while getting response from NotifyEnd",
+		fmt.Println(myjob.Id, ": error while getting response from notifying the end",
 			err.Error())
 		return
 	}
@@ -192,7 +194,7 @@ func (myjob *MyJob) NotifyStart(j *gjp.Job) {
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		fmt.Println("error while getting response from NotifyStart",
+		fmt.Println(myjob.Id, ": error while getting response from notifying the start",
 			err.Error())
 		return
 	}
