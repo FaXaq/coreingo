@@ -41,8 +41,6 @@ func NewJob(id, command, fromFile, toFile string) (j *MyJob, err error) {
 		mediaFiles []string
 	)
 
-	fmt.Println("test")
-
 	path = GetFileDirectory(fromFile)
 	mediaLength, err := GetFileDuration(fromFile)
 	toExt = GetFileExt(toFile)
@@ -84,7 +82,7 @@ func NewJob(id, command, fromFile, toFile string) (j *MyJob, err error) {
 			cmds = append(cmds, cmd)
 			cmdsArgs = append(cmdsArgs, args)
 		}
-	} else if command == "extract-audio" {
+	} else if command == "extract_audio" {
 		for i := 0; i < len(mediaFiles); i++ {
 			toPartFile := GetFileName(mediaFiles[i]) + toExt
 			cmd, args = CreateExtractAudioCommand(GetFileName(mediaFiles[i]),
