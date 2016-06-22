@@ -33,7 +33,7 @@ func main() {
 		IndentJSON: true,
 	}
 
-	api.Config().Render.Rest = restConfig
+	api.Config.Render.Rest = restConfig
 
 	api.Get("/", func(c *iris.Context) {
 		TestPing(c)

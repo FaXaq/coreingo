@@ -46,7 +46,7 @@ func GetInfosFromFile(filename, infoName, delimiter, dataDelimiter string) (info
 	return
 }
 
-func GenerateLogFile(logFileName, fileName, fileExt string) {
+func GenerateLogFile(logFileName, fileName, fileExt string, splitted bool) {
 	file, err := os.Create(logFileName)
 
 	if err != nil {
@@ -54,7 +54,11 @@ func GenerateLogFile(logFileName, fileName, fileExt string) {
 	}
 
 	file.Write([]byte("ffconcat version 1.0\n"))
-	for i := 0; i < 5; i++ {
-		file.Write([]byte("file " + fileName + "-" + strconv.Itoa(i) + fileExt + "\n"))
+	if (splitted) {
+		for i := 0; i < 5; i++ {
+			file.Write([]byte("file " + fileName + "-" + strconv.Itoa(i) + fileExt + "\n"))
+		}
+	} else {
+		file.Write([]byte("file " + fileName + "\n"))
 	}
 }
