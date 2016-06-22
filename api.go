@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"github.com/FaXaq/gjp"
 	"github.com/kataras/iris"
 )
@@ -60,7 +59,6 @@ func GetMyJobProgress(c *iris.Context, jobPool *gjp.JobPool) (err error) {
 				})
 			} else {
 				//get infos from the job
-				fmt.Println(timing)
 				c.JSON(iris.StatusOK, map[string]float64{
 					"percentage": timing,
 				})
