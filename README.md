@@ -1,19 +1,28 @@
 # coreingo
 
-Pour le déploiement : 
+Basic implementation of ffmpeg CGI with webservices interface.
+
+---
+
+Deploy : 
 
 Install go 1.6
 
-`go get -u github.com/kataras/iris` & `go get -u github.com/FaXaq/gjp` (ce sont les seules dépendances du projet)
-et ensuite `go get github.com/FaXaq/coreingo`
-puis `go run *.go` pour lancer le fichier, sinon `go build *.go` pour compiler le fichier !
-Installez les dépendances !
-Voici les API disponibles :
-* `POST /jobs` pour créer un job peut-être utilisé avec les arguments suivants :
-  * `command` quelle commande à exécuter (`extract-audio` et `convert`)
-  * `fromFile` chemin vers le fichier en input (ex: /home/user/Downloads/toto.mp4)
-  * `toFile` nom et extension du fichier (ex: giphy.mkv)
-  * Retourne un JSON contenant le job serialisé : 
+`go get -u github.com/kataras/iris` & `go get -u github.com/FaXaq/gjp` (only dependencies)
+and then `go get github.com/FaXaq/coreingo`
+
+Launch the script `run.sh` to run.
+
+
+----
+
+
+API : 
+* `POST /jobs` To create job :
+  * `command` command to execute (`extract-audio` and `convert`)
+  * `fromFile` path to file (ex: /home/user/Downloads/toto.mp4)
+  * `toFile` name & ext for the output file (ex: giphy.mkv)
+  * return : 
 ``` json
 {
   "job": {
@@ -25,9 +34,9 @@ Voici les API disponibles :
   }
 }
 ```
-* `GET /jobs/search` donne une liste d'infos sur les jobs
+* `GET /jobs/search` list of job info
   * `id` job id
-  * Retourne un JSON contenant le job serialisé :
+  * return :
 ``` json
 {
    "id": "9168fb1c-d488-4bdb-a0c8-ef97617bcf33",
@@ -37,9 +46,9 @@ Voici les API disponibles :
    "end": "0001-01-01T00:00:00Z"
 }
 ```
-* `GET /jobs/progress` Arrête la jobPool
+* `GET /jobs/progress` get job progress
   * `id` job id
-  * Retourne un JSON contenant uniquement la propriété percentage :
+  * return :
 ``` json
 {
    "percentage": 0.052427342648
